@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="run" basedir=".">
+    <property name="openjpa.home" value="/opt/openjpa/2.2.2"/>
+    <property name="mysql.jdbc.home" value="/opt/jdbc/mysql/5.1.26"/>
+
+    <!-- database connection properties -->
+    <property name="output.dir" value="${basedir}/output"/>
+
+    <path id="mysql.jar">
+        <fileset dir="${mysql.jdbc.home}">
+            <include name="mysql-connector-java-5.1.26-bin.jar"/>
+        </fileset>
+    </path>
+
+    <path id="classpath"
+        description="The classpath to use for compiling and running">
+				<pathelement path="${basedir}"/>
+        <fileset dir="${openjpa.home}">
+            <include name="openjpa-all-*.jar"/>
+        </fileset>
+				<path refid="mysql.jar" />
+    </path>
+
+    <path id="javaagent">
+        <fileset dir="${openjpa.home}">
+            <include name="openjpa-*.jar"/>
+            <exclude name="openjpa-all-*.jar"/>
+        </fileset>
+    </path>
+    <pathconvert property="javaagent" refid="javaagent"/>
+    <pathconvert property="classpath" refid="classpath"/>
+
+		<target name="echo">
+			<echo message="${javaagent}" />
+			<echo message="${classpath}" />
+		</target>
+
+		<target name="clean">
+			<delete file="${basedir}/orm.xml" />
+			<delete dir="${output.dir}" />
+		</target>
+
+		<target name="init" depends="clean">
+			<mkdir dir="${output.dir}" />
+		</target>
+
+    <target name="schema" depends="init" description="Run the example Main program">
+        <java classname="org.apache.openjpa.jdbc.schema.SchemaTool" fork="yes" failonerror="yes">
+						<classpath refid="classpath" />
+						<arg line="-a reflect" />
+						<arg line="-f ${output.dir}/schema.xml" />
+        </java>
+    </target>
+
+    <target name="reverse" depends="init" description="Run the example Main program">
+        <java classname="org.apache.openjpa.jdbc.meta.ReverseMappingTool" fork="yes" failonerror="yes">
+						<classpath refid="classpath" />
+						<arg line="-d ${output.dir}/src" />
+						<arg line="-pkg org.wangah.demo.jpa" />
+						<arg line="-pkj true" />
+						<arg line="-fkn true" />
+						<arg line="-ir true" />
+						<arg line="-gc true" />
+        </java>
+    </target>
+</project>
+
